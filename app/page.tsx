@@ -1,11 +1,13 @@
 import Link from 'next/link';
+import { db } from '@/db';
+import { posts as postsTable } from '@/db/schema';
+import { desc } from 'drizzle-orm';
 
 async function getPosts() {
-  "use cache";
-  const res = await fetch('http://localhost:3000/api/posts', {
-    cache: 'no-store',
-  });
-  return res.json();
+  return await db
+    .select()
+    .from(postsTable)
+    .orderBy(desc(postsTable.createdAt));
 }
 
 export default async function Home() {
@@ -21,13 +23,15 @@ export default async function Home() {
         <p>No posts yet.</p>
       ) : (
         <ul className="list-group">
-          {posts.map((post: unknown) => (
-            <li key={(post as { id: string }).id} className="list-group-item">
-              <Link href={`/post/${(post as { id: string }).id}`}>
-                {(post as { title: string }).title}
+          {posts.map((post) => (
+            <li key={post.id} className="list-group-item">
+              <Link href={`/post/${post.id}`}>
+                {post.title}
               </Link>
               <span className="text-muted float-end">
-                {new Date((post as { createdAt: string }).createdAt).toLocaleDateString('id-ID')}
+                {post.createdAt
+                  ? new Date(post.createdAt).toLocaleDateString('id-ID')
+                  : '-'}
               </span>
             </li>
           ))}
