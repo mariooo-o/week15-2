@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { db } from '@/db';
 import { posts } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { updatePost } from '@/app/actions';
+import { updatePost } from '@/app/actions'; // sesuaikan jika di '@/app/actions'
 
 async function EditForm({
   params,
