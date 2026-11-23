@@ -1,46 +1,25 @@
-'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { createPost } from '@/app/actions';
 
-export default function CreatePost() {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const router = useRouter();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await fetch('/api/posts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, content }),
-    });
-    router.push('/');
-  };
-
+export default function CreatePostPage() {
   return (
     <main className="container mt-4">
       <h1>Create Post</h1>
-      <form onSubmit={handleSubmit}>
+      <form action={createPost}>
         <div className="mb-3">
           <label className="form-label">Title</label>
-          <input
-            className="form-control"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
+          <input type="text" name="title" className="form-control" required />
         </div>
         <div className="mb-3">
           <label className="form-label">Content</label>
-          <textarea
-            className="form-control"
-            rows={5}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            required
-          />
+          <textarea name="content" rows={5} className="form-control" required />
         </div>
-        <button className="btn btn-success">Save</button>
+        <button type="submit" className="btn btn-primary me-2">
+          Save
+        </button>
+        <Link href="/" className="btn btn-secondary">
+          Cancel
+        </Link>
       </form>
     </main>
   );

@@ -1,35 +1,68 @@
-'use client';
+import { Suspense } from 'react';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { db } from '@/db';
+import { posts } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { deletePost } from '@/app/actions';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+async function PostContent({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
 
-export default function PostDetail() {
-  const { id } = useParams();
-  const router = useRouter();
-  const [post, setPost] = useState<unknown>(null);
+  const [post] = await db
+    .select()
+    .from(posts)
+    .where(eq(posts.id, Number(id)));
 
-  useEffect(() => {
-    fetch(`/api/posts/${id}`).then(async (res) => {
-      if (res.status === 404) router.push('/not-found');
-      else setPost(await res.json());
-    });
-  }, [id, router]);
+  if (!post) {
+    notFound();
+  }
 
-  const handleDelete = async () => {
-    await fetch(`/api/posts/${id}`, { method: 'DELETE' });
-    router.push('/');
-  };
-
-  if (!post) return <p className="container mt-4">Loading...</p>;
+  const deletePostWithId = deletePost.bind(null, post.id);
 
   return (
+    <>
+      <h1>{post.title}</h1>
+      <p className="text-muted">
+        {post.createdAt
+          ? new Date(post.createdAt).toLocaleDateString('id-ID')
+          : '-'}
+      </p>
+      <div className="mt-3">
+        <p>{post.content}</p>
+      </div>
+
+      <div className="d-flex gap-2 mt-4">
+        <Link href="/" className="btn btn-secondary">
+          Back
+        </Link>
+        <Link href={`/edit/${post.id}`} className="btn btn-warning">
+          Edit
+        </Link>
+        <form action={deletePostWithId}>
+          <button type="submit" className="btn btn-danger">
+            Delete
+          </button>
+        </form>
+      </div>
+    </>
+  );
+}
+
+export default function PostDetail({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
     <main className="container mt-4">
-      <h1>{(post as { title: string }).title}</h1>
-      <p className="text-muted">{new Date((post as { createdAt: string }).createdAt).toLocaleDateString('id-ID')}</p>
-      <p>{(post as { content: string }).content}</p>
-      <button onClick={handleDelete} className="btn btn-danger">
-        Delete
-      </button>
+      <Suspense fallback={<p>Loading post...</p>}>
+        <PostContent params={params} />
+      </Suspense>
     </main>
   );
 }
