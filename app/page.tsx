@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { db } from '@/db';
 import { posts as postsTable } from '@/db/schema';
 import { desc } from 'drizzle-orm';
+import { deletePost } from '@/app/actions';
 
 async function PostList() {
   const posts = await db
@@ -30,6 +31,16 @@ async function PostList() {
                 ? new Date(post.createdAt).toLocaleDateString('id-ID')
                 : '-'}
             </small>
+          </div>
+          <div className="d-flex gap-2">
+            <Link href={`/edit/${post.id}`} className="btn btn-sm btn-warning">
+              Edit
+            </Link>
+            <form action={deletePost.bind(null, post.id)}>
+              <button type="submit" className="btn btn-sm btn-danger">
+                Delete
+              </button>
+            </form>
           </div>
           <div className="d-flex gap-2">
             <Link href={`/edit/${post.id}`} className="btn btn-sm btn-warning">
