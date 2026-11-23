@@ -1,21 +1,38 @@
-import { db } from '@/db';
-import { posts } from '@/db/schema';
-import { desc } from 'drizzle-orm';
-import { NextResponse } from 'next/server';
+import Link from 'next/link';
 
-export async function GET() {
-  const allPosts = await db.select().from(posts).orderBy(desc(posts.createdAt));
-  return NextResponse.json(allPosts);
+async function getPosts() {
+  "use cache";
+  const res = await fetch('http://localhost:3000/api/posts', {
+    cache: 'no-store',
+  });
+  return res.json();
 }
 
-export async function POST(req: Request) {
-  const { title, content } = await req.json();
+export default async function Home() {
+  const posts = await getPosts();
 
-  // Validate the input
-  if (!title || !content) {
-    return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
-  }
-
-  const newPost = await db.insert(posts).values({ title, content }).returning();
-  return NextResponse.json(newPost, { status: 201 });
+  return (
+    <main className="container mt-4">
+      <h1>Blog Posts</h1>
+      <Link href="/create" className="btn btn-primary mb-3">
+        Create Post
+      </Link>
+      {posts.length === 0 ? (
+        <p>No posts yet.</p>
+      ) : (
+        <ul className="list-group">
+          {posts.map((post: unknown) => (
+            <li key={(post as { id: string }).id} className="list-group-item">
+              <Link href={`/post/${(post as { id: string }).id}`}>
+                {(post as { title: string }).title}
+              </Link>
+              <span className="text-muted float-end">
+                {new Date((post as { createdAt: string }).createdAt).toLocaleDateString('id-ID')}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </main>
+  );
 }
